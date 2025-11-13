@@ -1,0 +1,700 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>PKK XI SMK — Perencanaan Produksi (Terpadu + Chart)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .json-editor { min-height:10rem; max-height:18rem; overflow:auto; font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Courier New", monospace; }
+    .gantt-track { height:2.25rem; }
+    .gantt-bar { height:1.5rem; border-radius:6px; display:inline-flex; align-items:center; padding:0 .5rem; color:#042c54; font-weight:600; }
+    @media print { nav, .actions-top { display:none; } .no-print { display:none; } }
+    canvas { background: white; border-radius:8px; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+  <div class="max-w-6xl mx-auto p-6">
+    <header class="mb-6">
+      <div class="flex items-center gap-4">
+        <div class="rounded-lg bg-gradient-to-br from-sky-400 to-indigo-500 text-white px-3 py-2 font-bold">PKK</div>
+        <div>
+          <h1 class="text-2xl font-semibold">Perencanaan Produksi — PKK Kelas XI SMK</h1>
+          <p class="text-sm text-slate-600">Terpadu: Materi, Worksheet, Slide, Data Demo & Modul Praktik — plus grafik interaktif</p>
+        </div>
+      </div>
+    </header>
+
+    <div class="flex items-center justify-between gap-4 mb-4 actions-top">
+      <nav class="flex gap-2 flex-wrap">
+        <button data-tab="home" class="tab-btn px-3 py-1 bg-white border rounded text-sm">Beranda</button>
+        <button data-tab="worksheet" class="tab-btn px-3 py-1 bg-white border rounded text-sm">Worksheet</button>
+        <button data-tab="slide" class="tab-btn px-3 py-1 bg-white border rounded text-sm">Slide Guru</button>
+        <button data-tab="app" class="tab-btn px-3 py-1 bg-white border rounded text-sm">Aplikasi Praktik</button>
+        <button data-tab="data" class="tab-btn px-3 py-1 bg-white border rounded text-sm">Data Demo</button>
+      </nav>
+      <div class="flex gap-2">
+        <button id="print-btn" class="px-3 py-1 bg-emerald-600 text-white rounded text-sm">Print</button>
+        <button id="export-json" class="px-3 py-1 bg-white border rounded text-sm">Export Data</button>
+      </div>
+    </div>
+
+    <main>
+      <!-- HOME -->
+      <section id="home" class="tab-panel bg-white p-6 rounded shadow-sm">
+        <h2 class="text-lg font-semibold mb-2">Selamat datang</h2>
+        <p class="text-sm text-slate-700 mb-2">Gunakan worksheet, slide, muat dataset, lalu praktik di modul. Grafik membantu visualisasi permintaan dan peramalan.</p>
+      </section>
+
+      <!-- WORKSHEET -->
+      <section id="worksheet" class="tab-panel hidden bg-white p-6 mt-4 rounded shadow-sm">
+        <h2 class="text-lg font-semibold mb-3">Lembar Kerja Siswa — Singkat</h2>
+        <div class="space-y-4 text-sm text-slate-700">
+          <div class="p-4 border rounded">Pertemuan 1–5 (lihat instruksi pada aplikasi).</div>
+          <div class="p-4 border rounded">
+            <h3 class="font-semibold">Rumus Singkat</h3>
+            <ul class="list-disc ml-5 mt-2">
+              <li>SMA window 3: SMA_t = (D_t + D_{t-1} + D_{t-2}) / 3</li>
+              <li>WMA bobot 0.5,0.3,0.2: WMA_t = 0.5*D_t + 0.3*D_{t-1} + 0.2*D_{t-2}</li>
+              <li>MAPE: rata-rata persentase kesalahan; lebih kecil = lebih akurat</li>
+            </ul>
+            <div class="mt-3">
+              <button id="print-worksheet" class="px-3 py-1 bg-sky-600 text-white rounded text-sm">Print Worksheet</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE -->
+      <section id="slide" class="tab-panel hidden bg-white p-6 mt-4 rounded shadow-sm">
+        <h2 class="text-lg font-semibold mb-3">Slide Guru — 1 Halaman</h2>
+        <div class="p-4 border rounded">
+          <p class="text-sm">Durasi: 5 pertemuan. Fokus praktis: peramalan sederhana, MRP dasar, penjadwalan FCFS, ABC, kuis & presentasi.</p>
+          <div class="mt-3 text-sm"><button id="show-slide-full" class="px-3 py-1 bg-indigo-600 text-white rounded text-sm">Tampilkan Layar Penuh</button></div>
+        </div>
+      </section>
+
+      <!-- APP -->
+      <section id="app" class="tab-panel hidden bg-white p-6 mt-4 rounded shadow-sm">
+        <h2 class="text-lg font-semibold mb-3">Aplikasi Praktik</h2>
+
+        <div class="flex gap-2 mb-4 flex-wrap">
+          <button data-sub="dashboard" class="sub-btn px-3 py-1 bg-white border rounded text-sm">Dasbor</button>
+          <button data-sub="forecast" class="sub-btn px-3 py-1 bg-white border rounded text-sm">Peramalan</button>
+          <button data-sub="mrp" class="sub-btn px-3 py-1 bg-white border rounded text-sm">MRP</button>
+          <button data-sub="schedule" class="sub-btn px-3 py-1 bg-white border rounded text-sm">Penjadwalan</button>
+          <button data-sub="abc" class="sub-btn px-3 py-1 bg-white border rounded text-sm">ABC</button>
+          <button data-sub="quiz" class="sub-btn px-3 py-1 bg-white border rounded text-sm">Kuis</button>
+        </div>
+
+        <!-- DASHBOARD -->
+        <div id="dash" class="sub-panel border rounded p-4">
+          <div class="grid md:grid-cols-3 gap-4">
+            <div class="p-3 border rounded">
+              <div class="text-sm text-slate-500">Rata-rata Permintaan</div>
+              <div id="kpi-avg-demand" class="text-2xl font-bold text-sky-600">—</div>
+            </div>
+            <div class="p-3 border rounded">
+              <div class="text-sm text-slate-500">Lead Time MRP (maks)</div>
+              <div id="kpi-max-lead" class="text-2xl font-bold text-indigo-600">—</div>
+            </div>
+            <div class="p-3 border rounded">
+              <div class="text-sm text-slate-500">Total Nilai Penggunaan</div>
+              <div id="kpi-annual-value" class="text-2xl font-bold text-emerald-600">—</div>
+            </div>
+          </div>
+          <div class="mt-4 grid md:grid-cols-2 gap-4">
+            <div>
+              <h4 class="font-semibold mb-2">Grafik Permintaan</h4>
+              <canvas id="chart-demand" height="160"></canvas>
+            </div>
+            <div>
+              <h4 class="font-semibold mb-2">Ringkasan</h4>
+              <div id="dash-summary" class="text-sm text-slate-600"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- FORECAST -->
+        <div id="forecast-mod" class="sub-panel hidden border rounded p-4 mt-4">
+          <div class="md:flex md:gap-4">
+            <div class="md:w-1/3">
+              <h4 class="font-semibold">Data Permintaan</h4>
+              <div id="demand-list" class="text-sm text-slate-700 mt-2"></div>
+              <div class="mt-2 flex gap-2">
+                <button id="add-period" class="px-3 py-1 bg-sky-600 text-white rounded text-sm">Tambah</button>
+                <button id="edit-demand" class="px-3 py-1 bg-white border rounded text-sm">Edit CSV</button>
+              </div>
+            </div>
+            <div class="md:w-1/3">
+              <h4 class="font-semibold">Pengaturan</h4>
+              <label class="block text-sm mt-2">Window SMA
+                <input id="fc-window" type="number" min="2" max="8" value="3" class="mt-1 w-full border rounded p-1" />
+              </label>
+              <label class="block text-sm mt-2">Bobot WMA (terbaru→terlama)
+                <input id="fc-weights" type="text" value="0.5,0.3,0.2" class="mt-1 w-full border rounded p-1" />
+              </label>
+              <div class="mt-2 flex gap-2">
+                <button id="fc-run" class="px-3 py-1 bg-emerald-600 text-white rounded">Hitung</button>
+                <button id="fc-clear" class="px-3 py-1 bg-white border rounded">Bersihkan</button>
+              </div>
+            </div>
+            <div class="md:w-1/3">
+              <h4 class="font-semibold">Hasil & MAPE</h4>
+              <div id="forecast-result" class="text-sm mt-2"></div>
+              <div id="forecast-metrics" class="text-sm mt-2"></div>
+              <div class="mt-3">
+                <canvas id="chart-forecast" height="160"></canvas>
+              </div>
+              <details class="mt-2"><summary class="text-sm text-slate-600">Log</summary>
+                <pre id="forecast-log" class="text-xs p-2 bg-slate-50 rounded mt-2 max-h-40 overflow-auto"></pre>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <!-- MRP -->
+        <div id="mrp-mod" class="sub-panel hidden border rounded p-4 mt-4">
+          <div class="md:flex md:gap-4">
+            <div class="md:w-1/2">
+              <h4 class="font-semibold">Item & BOM</h4>
+              <div id="items-table" class="text-sm mt-2"></div>
+              <div class="mt-2 flex gap-2">
+                <button id="mrp-run" class="px-3 py-1 bg-indigo-600 text-white rounded">Jalankan</button>
+                <button id="mrp-edit" class="px-3 py-1 bg-white border rounded">Edit Items (JSON)</button>
+              </div>
+            </div>
+            <div class="md:w-1/2">
+              <h4 class="font-semibold">Hasil MRP</h4>
+              <div id="mrp-table" class="text-sm mt-2"></div>
+              <details class="mt-2"><summary class="text-sm text-slate-600">Log</summary>
+                <pre id="mrp-log" class="text-xs p-2 bg-slate-50 rounded mt-2 max-h-40 overflow-auto"></pre>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <!-- SCHEDULE -->
+        <div id="schedule-mod" class="sub-panel hidden border rounded p-4 mt-4">
+          <div class="md:flex md:gap-4">
+            <div class="md:w-1/3">
+              <h4 class="font-semibold">Jobs</h4>
+              <div id="jobs-table" class="text-sm mt-2"></div>
+              <div class="mt-2 flex gap-2">
+                <select id="sch-rule" class="border p-1 rounded text-sm"><option value="FCFS">FCFS</option></select>
+                <button id="sch-run" class="px-3 py-1 bg-sky-600 text-white rounded">Jadwalkan</button>
+                <button id="sch-edit" class="px-3 py-1 bg-white border rounded">Edit Job</button>
+              </div>
+            </div>
+            <div class="md:w-2/3">
+              <h4 class="font-semibold">Gantt</h4>
+              <div id="gantt" class="space-y-2 mt-2"></div>
+              <div id="sch-metrics" class="text-sm mt-2"></div>
+              <details class="mt-2"><summary class="text-sm text-slate-600">Log</summary>
+                <pre id="sch-log" class="text-xs p-2 bg-slate-50 rounded mt-2 max-h-40 overflow-auto"></pre>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <!-- ABC -->
+        <div id="abc-mod" class="sub-panel hidden border rounded p-4 mt-4">
+          <div class="md:flex md:gap-4">
+            <div class="md:w-1/2">
+              <h4 class="font-semibold">Persediaan</h4>
+              <div id="inv-table" class="text-sm mt-2"></div>
+              <div class="mt-2 flex gap-2">
+                <button id="abc-run" class="px-3 py-1 bg-emerald-600 text-white rounded">Klasifikasi</button>
+                <button id="abc-edit" class="px-3 py-1 bg-white border rounded">Edit Persediaan</button>
+              </div>
+            </div>
+            <div class="md:w-1/2">
+              <h4 class="font-semibold">Hasil & Saran</h4>
+              <div id="abc-result" class="text-sm mt-2"></div>
+              <details class="mt-2"><summary class="text-sm text-slate-600">Log</summary>
+                <pre id="abc-log" class="text-xs p-2 bg-slate-50 rounded mt-2 max-h-40 overflow-auto"></pre>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <!-- QUIZ -->
+        <div id="quiz-mod" class="sub-panel hidden border rounded p-4 mt-4">
+          <h4 class="font-semibold">Kuis Cepat (5 soal)</h4>
+          <div id="quiz-box" class="mt-2 text-sm"></div>
+          <div class="mt-3">
+            <button id="quiz-check" class="px-3 py-1 bg-indigo-600 text-white rounded">Periksa</button>
+            <button id="quiz-reset" class="px-3 py-1 bg-white border rounded ml-2">Reset</button>
+            <div id="quiz-score" class="mt-2 text-sm"></div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- DATA -->
+      <section id="data" class="tab-panel hidden bg-white p-6 mt-4 rounded shadow-sm">
+        <h2 class="text-lg font-semibold mb-3">Data Demo (Pilih dataset contoh)</h2>
+        <div class="grid md:grid-cols-2 gap-4">
+          <div class="border rounded p-4">
+            <select id="dataset-select" class="w-full border rounded p-2">
+              <option value="">-- Pilih dataset --</option>
+              <option value="tas">1 — Tas Rajut</option>
+              <option value="sabun">2 — Sabun Cair</option>
+              <option value="kue">3 — Kue Kering</option>
+              <option value="kayu">4 — Kerajinan Kayu</option>
+              <option value="konveksi">5 — Konveksi Kaos</option>
+              <option value="keripik">6 — Keripik</option>
+            </select>
+            <div class="mt-2 flex gap-2">
+              <button id="load-dataset" class="px-3 py-1 bg-sky-600 text-white rounded">Muat ke Editor</button>
+              <button id="save-json" class="px-3 py-1 bg-emerald-600 text-white rounded">Simpan ke aplikasi</button>
+              <button id="reset-json" class="px-3 py-1 bg-white border rounded">Reset Default</button>
+            </div>
+            <div id="json-error" class="text-red-600 text-sm mt-2"></div>
+          </div>
+
+          <div class="border rounded p-4">
+            <h4 class="font-semibold">Editor JSON (Data Aplikasi)</h4>
+            <textarea id="json-editor" class="json-editor w-full border rounded p-2"></textarea>
+            <div class="mt-2 text-sm text-slate-500">Edit JSON lalu tekan "Simpan ke aplikasi".</div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <footer class="mt-6 text-sm text-slate-500">© 2025 — Materi PKK Perencanaan Produksi</footer>
+  </div>
+
+  <script>
+  // ===== Default data & datasets =====
+  const defaultDB = {
+    demand: [120,100,140,130,160,150,170,165,180,175],
+    capacityHoursPerWeek: 240,
+    inventoryEnding: 320,
+    items: [
+      { id:'FG-A', name:'Finished Good A', level:0, onHand:100, lead:1, safety:20 },
+      { id:'RM-X', name:'Raw Material X', level:1, onHand:200, lead:2, safety:50 },
+      { id:'RM-Y', name:'Raw Material Y', level:1, onHand:150, lead:1, safety:30 }
+    ],
+    bom: [
+      { parent:'FG-A', child:'RM-X', qty:2 },
+      { parent:'FG-A', child:'RM-Y', qty:1 }
+    ],
+    jobs: [
+      { id:'J1', wc:'WC-1', procTime:6, due:10 },
+      { id:'J2', wc:'WC-1', procTime:4, due:7 },
+      { id:'J3', wc:'WC-2', procTime:8, due:12 },
+      { id:'J4', wc:'WC-2', procTime:3, due:6 }
+    ],
+    inventory: [
+      { sku:'SKU-01', name:'Bolt M8', price:0.5, consume:6000 },
+      { sku:'SKU-02', name:'Nut M8', price:0.4, consume:5800 },
+      { sku:'SKU-03', name:'Motor 24V', price:35, consume:200 }
+    ],
+    quiz: [
+      { q:'Tujuan utama perencanaan produksi adalah...', a:['Promosi','Menjamin ketersediaan produk','Memaksimalkan iklan'], correct:1 },
+      { q:'SMA window 3 menghitung rata-rata berapa periode?', a:['1','2','3'], correct:2 },
+      { q:'Planned Order Release menunjukkan...', a:['Waktu produk selesai','Waktu memesan bahan','Jumlah tenaga kerja'], correct:1 },
+      { q:'FCFS berarti...', a:['Shortest processing time','First come first serve','Most expensive first'], correct:1 },
+      { q:'Item kelas A biasanya...', a:['Nilai penggunaan rendah','Nilai penggunaan tinggi','Tidak penting'], correct:1 }
+    ]
+  };
+  let db = JSON.parse(JSON.stringify(defaultDB));
+
+  const datasets = {
+    tas: { name:"Tas Rajut", demand:[30,28,35,32,40,36,38,34], items:[{"id":"FG-TAS","name":"Tas Rajut","level":0,"onHand":20,"lead":1,"safety":10},{"id":"KAIN","name":"Kain Rajut","level":1,"onHand":100,"lead":2,"safety":30},{"id":"TALI","name":"Tali","level":1,"onHand":200,"lead":1,"safety":50}], bom:[{"parent":"FG-TAS","child":"KAIN","qty":1},{"parent":"FG-TAS","child":"TALI","qty":2}], jobs:[{"id":"J1","wc":"Jahit","procTime":3,"due":4},{"id":"J2","wc":"Finishing","procTime":1,"due":5}], inventory:[{"sku":"KAIN","name":"Kain Rajut","price":5,"consume":800},{"sku":"TALI","name":"Tali","price":1,"consume":1200}] },
+    sabun: { name:"Sabun Cair", demand:[50,55,60,58,65,62,70,68], items:[{"id":"FG-SABUN","name":"Sabun Cair 500ml","level":0,"onHand":30,"lead":1,"safety":15},{"id":"GULA","name":"Bahan Aktif","level":1,"onHand":200,"lead":2,"safety":50},{"id":"BOTOL","name":"Botol Plastik","level":1,"onHand":400,"lead":1,"safety":100}], bom:[{"parent":"FG-SABUN","child":"GULA","qty":0.5},{"parent":"FG-SABUN","child":"BOTOL","qty":1}], jobs:[{"id":"J1","wc":"Mixing","procTime":4,"due":6},{"id":"J2","wc":"Filling","procTime":2,"due":7}], inventory:[{"sku":"GULA","name":"Bahan Aktif","price":2,"consume":2000},{"sku":"BOTOL","name":"Botol","price":0.8,"consume":2500}] },
+    kue: { name:"Kue Kering", demand:[120,110,130,125,140,135,150,145], items:[{"id":"FG-KUE","name":"Kue Kering Pack","level":0,"onHand":50,"lead":1,"safety":20},{"id":"TERIGU","name":"Tepung Terigu","level":1,"onHand":1000,"lead":2,"safety":200},{"id":"GULA","name":"Gula Pasir","level":1,"onHand":800,"lead":1,"safety":150}], bom:[{"parent":"FG-KUE","child":"TERIGU","qty":0.3},{"parent":"FG-KUE","child":"GULA","qty":0.1}], jobs:[{"id":"J1","wc":"Mixing","procTime":5,"due":6},{"id":"J2","wc":"Oven","procTime":3,"due":8}], inventory:[{"sku":"TERIGU","name":"Tepung","price":0.5,"consume":5000},{"sku":"GULA","name":"Gula","price":0.4,"consume":3000}] },
+    kayu: { name:"Kerajinan Kayu", demand:[8,10,9,12,11,9,10,13], items:[{"id":"FG-KAYU","name":"Kotak Kayu","level":0,"onHand":5,"lead":2,"safety":2},{"id":"PAPAN","name":"Papan Kayu","level":1,"onHand":50,"lead":3,"safety":10},{"id":"PENGIKAT","name":"Lem/Finishing","level":1,"onHand":30,"lead":1,"safety":5}], bom:[{"parent":"FG-KAYU","child":"PAPAN","qty":2},{"parent":"FG-KAYU","child":"PENGIKAT","qty":0.2}], jobs:[{"id":"J1","wc":"Potong","procTime":6,"due":7},{"id":"J2","wc":"Finishing","procTime":2,"due":9}], inventory:[{"sku":"PAPAN","name":"Papan Kayu","price":8,"consume":300},{"sku":"PENGIKAT","name":"Lem/Fin","price":3,"consume":120}] },
+    konveksi: { name:"Konveksi Kaos", demand:[40,42,38,45,43,47,50,48], items:[{"id":"FG-TSHIRT","name":"Kaos Polos","level":0,"onHand":30,"lead":1,"safety":10},{"id":"KAIN","name":"Kain Katun","level":1,"onHand":200,"lead":2,"safety":50},{"id":"BENANG","name":"Benang Jahit","level":1,"onHand":500,"lead":1,"safety":100}], bom:[{"parent":"FG-TSHIRT","child":"KAIN","qty":1},{"parent":"FG-TSHIRT","child":"BENANG","qty":0.05}], jobs:[{"id":"J1","wc":"Cutting","procTime":4,"due":5},{"id":"J2","wc":"Sewing","procTime":6,"due":8}], inventory:[{"sku":"KAIN","name":"Kain Katun","price":10,"consume":1500},{"sku":"BENANG","name":"Benang","price":0.2,"consume":6000}] },
+    keripik: { name:"Keripik", demand:[200,180,220,210,230,225,240,235], items:[{"id":"FG-KERIPIK","name":"Keripik 100g","level":0,"onHand":80,"lead":1,"safety":30},{"id":"KERIPIKB","name":"Bahan Baku Kentang","level":1,"onHand":1000,"lead":2,"safety":300},{"id":"KEMAS","name":"Kemasan","level":1,"onHand":500,"lead":1,"safety":150}], bom:[{"parent":"FG-KERIPIK","child":"KERIPIKB","qty":0.2},{"parent":"FG-KERIPIK","child":"KEMAS","qty":1}], jobs:[{"id":"J1","wc":"Frying","procTime":8,"due":10},{"id":"J2","wc":"Packaging","procTime":2,"due":12}], inventory:[{"sku":"KERIPIKB","name":"Kentang","price":0.3,"consume":10000},{"sku":"KEMAS","name":"Kemasan","price":0.5,"consume":3000}] }
+  };
+
+  // Utilities
+  const $ = s => document.querySelector(s);
+  const $$ = s => Array.from(document.querySelectorAll(s));
+  const fmt = n => (typeof n==='number')? n.toFixed(2) : n;
+
+  // Tab handling
+  $$('.tab-btn').forEach((b,i)=>{
+    b.addEventListener('click', ()=>{
+      $$('.tab-btn').forEach(x=>x.classList.remove('ring','ring-2','ring-sky-300'));
+      b.classList.add('ring','ring-2','ring-sky-300');
+      $$('section.tab-panel').forEach(s=>s.classList.add('hidden'));
+      const id = b.getAttribute('data-tab');
+      $('#'+id).classList.remove('hidden');
+      if(id==='app') {
+        $$('button.sub-btn').forEach(x=>x.classList.remove('ring','ring-2','ring-sky-300'));
+        $$('button.sub-btn')[0].classList.add('ring','ring-2','ring-sky-300');
+        showSub('dashboard');
+      }
+    });
+  });
+  $$('button.tab-btn')[0].click();
+
+  $('#print-btn').addEventListener('click', ()=> window.print());
+  $('#print-worksheet').addEventListener('click', ()=> {
+    $$('button.tab-btn').forEach(b=> b.classList.remove('ring','ring-2','ring-sky-300'));
+    document.querySelector('[data-tab="worksheet"]').classList.add('ring','ring-2','ring-sky-300');
+    $$('section.tab-panel').forEach(s=>s.classList.add('hidden'));
+    $('#worksheet').classList.remove('hidden');
+    setTimeout(()=> window.print(), 300);
+  });
+
+  $('#show-slide-full').addEventListener('click', ()=>{
+    const w = window.open('','_blank','width=900,height=700');
+    w.document.write(`<title>Slide Guru</title><style>body{font-family:Arial;padding:30px}</style>${$('#slide').innerHTML}`);
+    w.document.close();
+  });
+
+  // Subpanel handling
+  $$('button.sub-btn').forEach(b=>{
+    b.addEventListener('click', ()=> {
+      $$('button.sub-btn').forEach(x=>x.classList.remove('ring','ring-2','ring-sky-300'));
+      b.classList.add('ring','ring-2','ring-sky-300');
+      showSub(b.dataset.sub);
+    });
+  });
+  function showSub(name){
+    $$('div.sub-panel').forEach(p=>p.classList.add('hidden'));
+    if(name==='dashboard') $('#dash').classList.remove('hidden');
+    if(name==='forecast') $('#forecast-mod').classList.remove('hidden');
+    if(name==='mrp') $('#mrp-mod').classList.remove('hidden');
+    if(name==='schedule') $('#schedule-mod').classList.remove('hidden');
+    if(name==='abc') $('#abc-mod').classList.remove('hidden');
+    if(name==='quiz') $('#quiz-mod').classList.remove('hidden');
+    renderAll();
+  }
+
+  // Charts
+  let chartDemand = null;
+  let chartForecast = null;
+  function initCharts(){
+    const ctxD = document.getElementById('chart-demand').getContext('2d');
+    chartDemand = new Chart(ctxD, {
+      type: 'bar',
+      data: { labels: [], datasets: [
+        { label: 'Permintaan', backgroundColor: '#38bdf8', data: [] },
+        { label: 'Forecast (SMA)', type:'line', borderColor:'#7c3aed', backgroundColor:'#7c3aed33', data: [], tension:0.2 }
+      ]},
+      options: { responsive:true, plugins:{legend:{position:'top'}}, scales:{y:{beginAtZero:true}} }
+    });
+    const ctxF = document.getElementById('chart-forecast').getContext('2d');
+    chartForecast = new Chart(ctxF, {
+      type: 'line',
+      data: { labels: [], datasets: [
+        { label: 'Aktual', borderColor:'#0ea5e9', backgroundColor:'#0ea5e933', data: [], fill:false, tension:0.2 },
+        { label: 'SMA', borderColor:'#7c3aed', backgroundColor:'#7c3aed33', data: [], fill:false, tension:0.2 },
+        { label: 'WMA', borderColor:'#10b981', backgroundColor:'#10b98133', data: [], fill:false, tension:0.2 }
+      ]},
+      options: { responsive:true, plugins:{legend:{position:'top'}}, scales:{y:{beginAtZero:true}} }
+    });
+  }
+
+  // Render Dashboard
+  function renderDashboard(){
+    const avg = (db.demand.reduce((a,b)=>a+b,0)/db.demand.length) || 0;
+    $('#kpi-avg-demand').textContent = fmt(avg);
+    const maxLead = Math.max(...(db.items||[]).map(i=>i.lead||0));
+    $('#kpi-max-lead').textContent = (isFinite(maxLead)? maxLead + ' periode' : '-');
+    const totalValue = (db.inventory||[]).reduce((s,i)=> s + (i.price * i.consume), 0);
+    $('#kpi-annual-value').textContent = totalValue? 'Rp ' + Number(totalValue).toLocaleString() : '-';
+    $('#dash-summary').textContent = `Data: ${db.demand.length} periode · Item: ${(db.items||[]).length} · Persediaan: ${(db.inventory||[]).length}`;
+    // update chartDemand
+    if(chartDemand){
+      chartDemand.data.labels = (db.demand||[]).map((_,i)=> 'P'+(i+1));
+      chartDemand.data.datasets[0].data = db.demand || [];
+      // try show SMA if computed stored in db._lastSMA
+      chartDemand.data.datasets[1].data = (db._lastSMA || []).map(v=> v===undefined? null : v);
+      chartDemand.update();
+    }
+  }
+
+  // Forecast logic
+  function renderForecastUI(){
+    $('#demand-list').innerHTML = (db.demand||[]).map((v,i)=>`P${i+1}: ${v}`).join(' · ');
+    $('#forecast-result').innerHTML = '';
+    $('#forecast-metrics').innerHTML = '';
+    $('#forecast-log').textContent = '';
+    if(chartForecast){
+      const labels = (db.demand||[]).map((_,i)=> 'P'+(i+1));
+      chartForecast.data.labels = labels;
+      chartForecast.data.datasets[0].data = db.demand || [];
+      chartForecast.data.datasets[1].data = (db._lastSMA || []).map(v=> v===undefined? null : v);
+      chartForecast.data.datasets[2].data = (db._lastWMA || []).map(v=> v===undefined? null : v);
+      chartForecast.update();
+    }
+  }
+
+  function computeSMA(arr,w){
+    const out = new Array(arr.length).fill(undefined);
+    const log = [];
+    for(let i=0;i<arr.length;i++){
+      if(i < w-1) continue;
+      const window = arr.slice(i-w+1, i+1);
+      const avg = window.reduce((a,b)=>a+b,0)/w;
+      out[i]=avg;
+      log.push(`SMA P${i+1} = avg([${window.join(', ')}]) = ${fmt(avg)}`);
+    }
+    return { out, log };
+  }
+  function computeWMA(arr, weights){
+    const w = weights.length;
+    const out = new Array(arr.length).fill(undefined);
+    const log = [];
+    const sumW = weights.reduce((a,b)=>a+b,0);
+    if(Math.abs(sumW-1) > 1e-6) {
+      return { out, log: ['Bobot WMA tidak total=1; WMA dilewati.'] };
+    }
+    for(let i=0;i<arr.length;i++){
+      if(i < w-1) continue;
+      const window = arr.slice(i-w+1, i+1).slice().reverse();
+      const val = window.reduce((acc,v,idx)=>acc + v*weights[idx], 0);
+      out[i]=val;
+      log.push(`WMA P${i+1} = ${fmt(val)}`);
+    }
+    return { out, log };
+  }
+  function mape(actual, forecast){
+    let n=0, sum=0;
+    for(let i=0;i<actual.length;i++){
+      const a=actual[i], f=forecast[i];
+      if(f===undefined || f===null || a===0) continue;
+      sum += Math.abs((a-f)/a)*100; n++;
+    }
+    return n? sum/n : Infinity;
+  }
+
+  $('#fc-run').addEventListener('click', ()=>{
+    const w = Math.max(2, Math.min(8, parseInt($('#fc-window').value) || 3));
+    const weights = $('#fc-weights').value.split(',').map(x=>parseFloat(x.trim())).filter(x=>!isNaN(x));
+    const { out: sma, log: logSMA } = computeSMA(db.demand || [], w);
+    const { out: wma, log: logWMA } = computeWMA(db.demand || [], weights);
+    db._lastSMA = sma;
+    db._lastWMA = wma;
+    const errSMA = mape(db.demand || [], sma);
+    const errWMA = mape(db.demand || [], wma);
+    const rows = (db.demand || []).map((d,i)=> `<tr class="odd:bg-slate-50"><td class="px-2 py-1">${i+1}</td><td class="px-2 py-1">${d}</td><td class="px-2 py-1">${sma[i]===undefined?'-':fmt(sma[i])}</td><td class="px-2 py-1">${wma[i]===undefined?'-':fmt(wma[i])}</td></tr>`).join('');
+    $('#forecast-result').innerHTML = `<table class="w-full text-sm border"><thead class="bg-slate-100"><tr><th class="p-2">Per</th><th class="p-2">Aktual</th><th class="p-2">SMA</th><th class="p-2">WMA</th></tr></thead><tbody>${rows}</tbody></table>`;
+    $('#forecast-metrics').innerHTML = `<div><strong>MAPE SMA:</strong> ${isFinite(errSMA)?fmt(errSMA)+'%':'—'}</div><div><strong>MAPE WMA:</strong> ${isFinite(errWMA)?fmt(errWMA)+'%':'—'}</div>`;
+    $('#forecast-log').textContent = [...logSMA, ...logWMA].join('\\n');
+    renderDashboard();
+    renderForecastUI();
+    // update demand chart on dashboard: chartDemand already uses db._lastSMA
+    if(chartDemand) {
+      chartDemand.data.datasets[1].data = (db._lastSMA || []).map(v=> v===undefined? null : v);
+      chartDemand.update();
+    }
+  });
+
+  $('#fc-clear').addEventListener('click', ()=> { db._lastSMA = []; db._lastWMA = []; renderForecastUI(); if(chartDemand){ chartDemand.data.datasets[1].data = []; chartDemand.update(); }});
+  $('#add-period').addEventListener('click', ()=>{
+    const v = parseFloat(prompt('Masukkan permintaan periode baru (angka)', '160'));
+    if(!isNaN(v)) { db.demand.push(v); renderForecastUI(); renderDashboard(); $('#json-editor').value = JSON.stringify(db, null, 2); }
+  });
+  $('#edit-demand').addEventListener('click', ()=>{
+    const csv = prompt('Masukkan permintaan CSV (contoh: 120,100,140,...)', (db.demand||[]).join(','));
+    if(csv!==null){
+      const arr = csv.split(',').map(x=>parseFloat(x.trim())).filter(x=>!isNaN(x));
+      if(arr.length>=3){ db.demand = arr; renderForecastUI(); renderDashboard(); $('#json-editor').value = JSON.stringify(db, null, 2);} else alert('Minimal 3 periode');
+    }
+  });
+
+  // ===== MRP =====
+  function renderItemsUI(){
+    const rows = (db.items||[]).map(it=>`<tr class="odd:bg-slate-50"><td class="px-2 py-1">${it.id}</td><td class="px-2 py-1">${it.name}</td><td class="px-2 py-1">${it.level}</td><td class="px-2 py-1">${it.onHand}</td><td class="px-2 py-1">${it.lead}</td><td class="px-2 py-1">${it.safety}</td></tr>`).join('');
+    $('#items-table').innerHTML = `<table class="w-full text-sm border"><thead class="bg-slate-100"><tr><th class="p-2">ID</th><th class="p-2">Nama</th><th class="p-2">Level</th><th class="p-2">OnHand</th><th class="p-2">Lead</th><th class="p-2">Safety</th></tr></thead><tbody>${rows}</tbody></table>`;
+  }
+  function runMRP(){
+    const horizon = 6;
+    const log = [];
+    const fg = (db.items||[]).find(i=>i.level===0);
+    if(!fg){ alert('Tidak ada FG level 0'); return; }
+    const grossFG = Array.from({length:horizon}, (_,i)=> (db.demand||[])[(db.demand||[]).length-horizon + i] ?? (db.demand||[])[(db.demand||[]).length-1] || 0);
+    log.push(`Kebutuhan kotor FG: [${grossFG.join(', ')}]`);
+    const plan = [];
+    const lotQty = (need)=> need; // L4L
+    let availFG = fg.onHand - fg.safety;
+    for(let t=0;t<horizon;t++){
+      const gross = grossFG[t];
+      const net = Math.max(0, gross - availFG);
+      const receipt = net>0 ? lotQty(net) : 0;
+      const release = receipt>0 ? Math.max(0, t - fg.lead) : 0;
+      plan.push({ item:fg.id, period:t+1, gross, net, receipt, release });
+      availFG = availFG - gross + receipt;
+      log.push(`FG p${t+1}: gross=${gross} net=${net} receipt=${receipt} avail=${availFG}`);
+    }
+    for(const ch of (db.items||[]).filter(i=>i.level===1)){
+      let avail = ch.onHand - ch.safety;
+      const qtyPer = (db.bom||[]).find(b=>b.parent===fg.id && b.child===ch.id)?.qty || 0;
+      for(let t=0;t<horizon;t++){
+        const parentProd = plan[t].receipt;
+        const gross = parentProd * qtyPer;
+        const net = Math.max(0, gross - avail);
+        const receipt = net>0 ? lotQty(net) : 0;
+        const release = receipt>0 ? Math.max(0, t - ch.lead) : 0;
+        plan.push({ item:ch.id, period:t+1, gross, net, receipt, release });
+        avail = avail - gross + receipt;
+        log.push(`${ch.id} p${t+1}: gross=${gross} net=${net} receipt=${receipt} avail=${avail}`);
+      }
+    }
+    const hdr = `<tr class="bg-slate-100"><th class="p-2">Item</th><th class="p-2">Per</th><th class="p-2">Gross</th><th class="p-2">Net</th><th class="p-2">Receipt</th><th class="p-2">Planned Release</th></tr>`;
+    const rows = plan.map(p=>`<tr class="odd:bg-slate-50"><td class="px-2 py-1">${p.item}</td><td class="px-2 py-1">${p.period}</td><td class="px-2 py-1">${p.gross}</td><td class="px-2 py-1">${p.net}</td><td class="px-2 py-1">${p.receipt}</td><td class="px-2 py-1">${p.release}</td></tr>`).join('');
+    $('#mrp-table').innerHTML = `<table class="w-full text-sm border">${hdr}<tbody>${rows}</tbody></table>`;
+    $('#mrp-log').textContent = log.join('\\n');
+    renderDashboard();
+    $('#json-editor').value = JSON.stringify(db, null, 2);
+  }
+  $('#mrp-run').addEventListener('click', runMRP);
+  $('#mrp-edit').addEventListener('click', ()=>{
+    const raw = prompt('Edit items JSON', JSON.stringify(db.items, null, 2));
+    if(!raw) return;
+    try { db.items = JSON.parse(raw); renderItemsUI(); renderDashboard(); $('#json-editor').value = JSON.stringify(db, null, 2);} catch(e){ alert('JSON invalid'); }
+  });
+
+  // Schedule
+  function renderJobs(){ const rows = (db.jobs||[]).map(j=>`<tr class="odd:bg-slate-50"><td class="px-2 py-1">${j.id}</td><td class="px-2 py-1">${j.wc}</td><td class="px-2 py-1">${j.procTime}</td><td class="px-2 py-1">${j.due}</td></tr>`).join(''); $('#jobs-table').innerHTML = `<table class="w-full text-sm border"><thead class="bg-slate-100"><tr><th class="p-2">Job</th><th class="p-2">WC</th><th class="p-2">Proc</th><th class="p-2">Due</th></tr></thead><tbody>${rows}</tbody></table>`; }
+  function runSchedule(){
+    const byWC = {};
+    (db.jobs||[]).forEach(j=> { (byWC[j.wc] = byWC[j.wc]||[]).push({...j}); });
+    $('#gantt').innerHTML = '';
+    const log = [];
+    let globalMakespan = 0, latenessSum=0, count=0;
+    Object.keys(byWC).forEach(wc=>{
+      let time = 0;
+      const track = document.createElement('div');
+      track.className = 'gantt-track border rounded p-2 bg-slate-50';
+      byWC[wc].forEach(job=>{
+        const start = time, end = time + job.procTime;
+        time = end;
+        globalMakespan = Math.max(globalMakespan, end);
+        const lateness = Math.max(0, end - job.due);
+        latenessSum += lateness; count++;
+        log.push(`${wc} ${job.id}: start=${start} end=${end} due=${job.due} lateness=${lateness}`);
+        const bar = document.createElement('div');
+        bar.className = 'gantt-bar bg-emerald-300';
+        bar.style.marginLeft = (start*14)+'px';
+        bar.style.width = (job.procTime*14)+'px';
+        bar.textContent = `${job.id}`;
+        track.appendChild(bar);
+      });
+      const label = document.createElement('div');
+      label.className = 'text-xs text-slate-600 mb-1';
+      label.textContent = wc;
+      $('#gantt').appendChild(label);
+      $('#gantt').appendChild(track);
+    });
+    $('#sch-log').textContent = log.join('\\n');
+    $('#sch-metrics').innerHTML = `<div><strong>Makespan:</strong> ${globalMakespan}</div><div><strong>Avg Lateness:</strong> ${count? fmt(latenessSum/count) : 0}</div>`;
+    $('#json-editor').value = JSON.stringify(db, null, 2);
+  }
+  $('#sch-run').addEventListener('click', runSchedule);
+  $('#sch-edit').addEventListener('click', ()=>{
+    const raw = prompt('Edit jobs JSON', JSON.stringify(db.jobs, null, 2));
+    if(!raw) return;
+    try { db.jobs = JSON.parse(raw); renderJobs(); $('#json-editor').value = JSON.stringify(db, null, 2);} catch(e){ alert('JSON invalid'); }
+  });
+
+  // ABC
+  function renderInv(){ const rows = (db.inventory||[]).map(i=>`<tr class="odd:bg-slate-50"><td class="px-2 py-1">${i.sku}</td><td class="px-2 py-1">${i.name}</td><td class="px-2 py-1">${i.price}</td><td class="px-2 py-1">${i.consume}</td></tr>`).join(''); $('#inv-table').innerHTML = `<table class="w-full text-sm border"><thead class="bg-slate-100"><tr><th class="p-2">SKU</th><th class="p-2">Nama</th><th class="p-2">Harga</th><th class="p-2">Konsumsi</th></tr></thead><tbody>${rows}</tbody></table>`; }
+  function runABC(){
+    const rows = (db.inventory||[]).map(i=> ({...i, value: i.price * i.consume})).sort((a,b)=>b.value - a.value);
+    const total = rows.reduce((s,r)=>s+r.value,0);
+    let cum=0;
+    const out = rows.map(r=>{
+      cum += r.value;
+      const cumPct = (cum/total)*100;
+      const cls = cumPct <= 80 ? 'A' : cumPct <=95 ? 'B' : 'C';
+      return {...r, cumPct, cls};
+    });
+    const rowsHtml = out.map(o=>`<tr class="odd:bg-slate-50"><td class="px-2 py-1">${o.sku}</td><td class="px-2 py-1">${o.name}</td><td class="px-2 py-1">Rp ${Number(o.value).toLocaleString()}</td><td class="px-2 py-1">${fmt(o.cumPct)}%</td><td class="px-2 py-1">${o.cls}</td></tr>`).join('');
+    $('#abc-result').innerHTML = `<table class="w-full text-sm border"><thead class="bg-slate-100"><tr><th class="p-2">SKU</th><th class="p-2">Nama</th><th class="p-2">Nilai</th><th class="p-2">Cumm%</th><th class="p-2">Kelas</th></tr></thead><tbody>${rowsHtml}</tbody></table>`;
+    $('#abc-log').textContent = out.map(o=>`${o.sku} value=${o.value} cum%=${fmt(o.cumPct)} class=${o.cls}`).join('\\n');
+    $('#json-editor').value = JSON.stringify(db, null, 2);
+  }
+  $('#abc-run').addEventListener('click', runABC);
+  $('#abc-edit').addEventListener('click', ()=>{
+    const raw = prompt('Edit inventory JSON', JSON.stringify(db.inventory, null, 2));
+    if(!raw) return;
+    try { db.inventory = JSON.parse(raw); renderInv(); renderDashboard(); $('#json-editor').value = JSON.stringify(db, null, 2);} catch(e){ alert('JSON invalid'); }
+  });
+
+  // Quiz
+  function renderQuiz(){
+    $('#quiz-box').innerHTML = (db.quiz||[]).map((q,idx)=> {
+      const opts = q.a.map((opt,i)=> `<label class="block text-sm"><input type="radio" name="q${idx}" value="${i}" class="mr-2">${opt}</label>`).join('');
+      return `<div class="p-3 border rounded bg-slate-50"><div class="font-medium">Q${idx+1}. ${q.q}</div>${opts}</div>`;
+    }).join('');
+  }
+  $('#quiz-check').addEventListener('click', ()=>{
+    let score=0;
+    (db.quiz||[]).forEach((q,idx)=>{
+      const sel = document.querySelector(`input[name="q${idx}"]:checked`);
+      if(sel && parseInt(sel.value)===q.correct) score++;
+    });
+    $('#quiz-score').textContent = `Skor: ${score}/${(db.quiz||[]).length}`;
+  });
+  $('#quiz-reset').addEventListener('click', ()=> { renderQuiz(); $('#quiz-score').textContent=''; });
+
+  // Data editor actions
+  function loadJsonEditor(){ $('#json-editor').value = JSON.stringify(db, null, 2); $('#json-error').textContent=''; }
+  $('#save-json').addEventListener('click', ()=>{
+    try {
+      const parsed = JSON.parse($('#json-editor').value);
+      db = parsed;
+      $('#json-error').textContent = '';
+      alert('Data disimpan. Modul diperbarui.');
+      renderAll();
+    } catch(e){
+      $('#json-error').textContent = 'JSON tidak valid: ' + e.message;
+    }
+  });
+  $('#reset-json').addEventListener('click', ()=>{
+    db = JSON.parse(JSON.stringify(defaultDB));
+    loadJsonEditor();
+    renderAll();
+  });
+  $('#load-dataset').addEventListener('click', ()=>{
+    const key = $('#dataset-select').value;
+    if(!key){ alert('Pilih dataset terlebih dahulu'); return; }
+    const ds = datasets[key];
+    db.demand = ds.demand.slice();
+    db.items = ds.items.map(x=>Object.assign({}, x));
+    db.bom = ds.bom.map(x=>Object.assign({}, x));
+    db.jobs = ds.jobs.map(x=>Object.assign({}, x));
+    db.inventory = ds.inventory.map(x=>Object.assign({}, x));
+    $('#json-editor').value = JSON.stringify(db, null, 2);
+    alert('Dataset dimuat ke editor. Tekan "Simpan ke aplikasi" untuk menerapkannya.');
+  });
+
+  // Export JSON
+  $('#export-json').addEventListener('click', ()=>{
+    const blob = new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'pkk_perencanaan_produksi_data.json';
+    a.click();
+  });
+
+  // Render helpers
+  function renderItems(){ renderItemsUI(); }
+  function renderJobs(){ const rows = (db.jobs||[]).map(j=>`<tr class="odd:bg-slate-50"><td class="px-2 py-1">${j.id}</td><td class="px-2 py-1">${j.wc}</td><td class="px-2 py-1">${j.procTime}</td><td class="px-2 py-1">${j.due}</td></tr>`).join(''); $('#jobs-table').innerHTML = `<table class="w-full text-sm border"><thead class="bg-slate-100"><tr><th class="p-2">Job</th><th class="p-2">WC</th><th class="p-2">Proc</th><th class="p-2">Due</th></tr></thead><tbody>${rows}</tbody></table>`; }
+  function renderInv(){ const rows = (db.inventory||[]).map(i=>`<tr class="odd:bg-slate-50"><td class="px-2 py-1">${i.sku}</td><td class="px-2 py-1">${i.name}</td><td class="px-2 py-1">${i.price}</td><td class="px-2 py-1">${i.consume}</td></tr>`).join(''); $('#inv-table').innerHTML = `<table class="w-full text-sm border"><thead class="bg-slate-100"><tr><th class="p-2">SKU</th><th class="p-2">Nama</th><th class="p-2">Harga</th><th class="p-2">Konsumsi</th></tr></thead><tbody>${rows}</tbody></table>`; }
+
+  // Render all
+  function renderAll(){
+    if(!chartDemand || !chartForecast) initCharts();
+    renderDashboard();
+    renderForecastUI();
+    renderItemsUI();
+    renderJobs();
+    renderInv();
+    renderQuiz();
+    loadJsonEditor();
+  }
+  document.addEventListener('DOMContentLoaded', renderAll);
+  </script>
+</body>
+</html>
