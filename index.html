@@ -5,178 +5,239 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>PKK XI SMK — Perencanaan Produksi</title>
 
-  <!-- Chart.js CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
-  <!-- Stylesheet lokal -->
+  <!-- Styles -->
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="container">
-    <header class="header">
+  <div class="wrap">
+    <header class="site-header">
       <div class="brand">PKK</div>
       <div class="title">
         <h1>Perencanaan Produksi — PKK Kelas XI SMK</h1>
-        <p>Materi, worksheet, slide, data demo & modul praktik</p>
+        <p class="subtitle">Materi, worksheet, slide, data demo & modul praktik</p>
+      </div>
+      <div class="actions-top">
+        <button id="print-btn" class="btn ghost">Print</button>
+        <button id="export-json" class="btn ghost">Export Data</button>
       </div>
     </header>
 
-    <nav class="nav">
-      <button class="tab-btn" data-tab="home">Beranda</button>
-      <button class="tab-btn" data-tab="worksheet">Worksheet</button>
-      <button class="tab-btn" data-tab="slide">Slide Guru</button>
-      <button class="tab-btn" data-tab="app">Aplikasi Praktik</button>
-      <button class="tab-btn" data-tab="data">Data Demo</button>
-
-      <div class="right-actions">
-        <button id="print-btn">Print</button>
-        <button id="export-json">Export Data</button>
+    <nav class="main-nav" role="navigation" aria-label="Main">
+      <div class="nav-left">
+        <button class="tab-btn active" data-tab="home">Beranda</button>
+        <button class="tab-btn" data-tab="worksheet">Worksheet</button>
+        <button class="tab-btn" data-tab="slide">Slide Guru</button>
+        <button class="tab-btn" data-tab="app">Aplikasi Praktik</button>
+        <button class="tab-btn" data-tab="data">Data Demo</button>
       </div>
+      <div class="nav-right small-note">© 2025</div>
     </nav>
 
-    <main>
+    <main class="main" id="main">
       <!-- HOME -->
       <section id="home" class="tab-panel">
-        <h2>Selamat datang</h2>
-        <p>Gunakan worksheet, slide, muat dataset, lalu praktik di modul. Grafik membantu visualisasi permintaan dan peramalan.</p>
+        <div class="card">
+          <h2>Selamat datang</h2>
+          <p>Gunakan worksheet, slide, muat dataset, lalu praktik di modul. Grafik membantu visualisasi permintaan dan peramalan.</p>
+        </div>
+        <div class="card grid-3">
+          <div><strong>Durasi</strong><div class="muted">Rekomendasi 5 pertemuan</div></div>
+          <div><strong>Fokus</strong><div class="muted">Praktik & keputusan nyata</div></div>
+          <div><strong>Output</strong><div class="muted">Worksheet, screenshot, rekomendasi</div></div>
+        </div>
       </section>
 
       <!-- WORKSHEET -->
       <section id="worksheet" class="tab-panel hidden">
-        <h2>Worksheet Siswa (Ringkas)</h2>
-        <ol>
-          <li>Pertemuan 1: Konsep dasar (permintaan, kapasitas, persediaan)</li>
-          <li>Pertemuan 2: Peramalan sederhana (SMA & WMA)</li>
-          <li>Pertemuan 3: MRP sederhana (BOM → Net → Planned Release)</li>
-          <li>Pertemuan 4: Penjadwalan FCFS & ABC</li>
-          <li>Pertemuan 5: Kuis & Presentasi</li>
-        </ol>
-        <p>Rumus singkat:</p>
-        <ul>
-          <li>SMA window 3 = (Dt + Dt-1 + Dt-2) / 3</li>
-          <li>WMA (0.5,0.3,0.2) = 0.5*Dt + 0.3*Dt-1 + 0.2*Dt-2</li>
-        </ul>
-        <button id="print-worksheet">Print Worksheet</button>
+        <div class="card">
+          <h2>Worksheet Siswa (Ringkas)</h2>
+          <ol class="spaced-list">
+            <li>Pertemuan 1: Konsep dasar (permintaan, kapasitas, persediaan)</li>
+            <li>Pertemuan 2: Peramalan sederhana (SMA & WMA)</li>
+            <li>Pertemuan 3: MRP sederhana (BOM → Net → Planned Release)</li>
+            <li>Pertemuan 4: Penjadwalan FCFS & ABC</li>
+            <li>Pertemuan 5: Kuis & Presentasi</li>
+          </ol>
+          <div class="formula">
+            <div><strong>SMA window 3</strong> = (Dt + Dt-1 + Dt-2) / 3</div>
+            <div><strong>WMA (0.5,0.3,0.2)</strong> = 0.5*Dt + 0.3*Dt-1 + 0.2*Dt-2</div>
+          </div>
+          <div class="card-actions">
+            <button id="print-worksheet" class="btn primary">Print Worksheet</button>
+          </div>
+        </div>
       </section>
 
       <!-- SLIDE -->
       <section id="slide" class="tab-panel hidden">
-        <h2>Slide Guru</h2>
-        <div id="slide-content">
-          <h3>Perencanaan Produksi — Ringkasan</h3>
-          <p>5 pertemuan — fokus praktek dan keputusan sederhana (kapan pesan bahan, berapa produksi).</p>
+        <div class="card">
+          <h2>Slide Guru — Ringkasan</h2>
+          <p>5 pertemuan — fokus praktik dan keputusan sederhana (kapan pesan bahan, berapa produksi).</p>
+          <div class="card-actions">
+            <button id="open-slide" class="btn">Tampilkan Layar Penuh</button>
+          </div>
         </div>
-        <button id="open-slide">Tampilkan Layar Penuh</button>
       </section>
 
       <!-- APP -->
       <section id="app" class="tab-panel hidden">
-        <h2>Aplikasi Praktik</h2>
-
-        <div class="subnav">
-          <button class="sub-btn" data-sub="dashboard">Dasbor</button>
-          <button class="sub-btn" data-sub="forecast">Peramalan</button>
-          <button class="sub-btn" data-sub="mrp">MRP</button>
-          <button class="sub-btn" data-sub="schedule">Penjadwalan</button>
-          <button class="sub-btn" data-sub="abc">ABC</button>
-          <button class="sub-btn" data-sub="quiz">Kuis</button>
-        </div>
-
-        <div id="dash" class="sub-panel">
-          <div class="kpis">
-            <div class="kpi"><div class="label">Rata-rata Permintaan</div><div id="kpi-avg-demand" class="value">—</div></div>
-            <div class="kpi"><div class="label">Lead Time MRP (maks)</div><div id="kpi-max-lead" class="value">—</div></div>
-            <div class="kpi"><div class="label">Total Nilai Penggunaan</div><div id="kpi-annual-value" class="value">—</div></div>
+        <div class="card">
+          <div class="subnav" role="tablist">
+            <button class="sub-btn active" data-sub="dashboard">Dasbor</button>
+            <button class="sub-btn" data-sub="forecast">Peramalan</button>
+            <button class="sub-btn" data-sub="mrp">MRP</button>
+            <button class="sub-btn" data-sub="schedule">Penjadwalan</button>
+            <button class="sub-btn" data-sub="abc">ABC</button>
+            <button class="sub-btn" data-sub="quiz">Kuis</button>
           </div>
-          <div class="charts">
-            <canvas id="chart-demand" height="120"></canvas>
-          </div>
-          <div id="dash-summary" class="summary"></div>
-        </div>
 
-        <div id="forecast-mod" class="sub-panel hidden">
-          <h3>Peramalan</h3>
-          <div class="columns">
-            <div>
-              <div id="demand-list" class="small"></div>
-              <button id="add-period">Tambah</button>
-              <button id="edit-demand">Edit CSV</button>
+          <!-- Dasbor -->
+          <div id="dash" class="sub-panel">
+            <div class="kpi-row">
+              <div class="kpi"><div class="kpi-label">Rata-rata Permintaan</div><div id="kpi-avg-demand" class="kpi-value">—</div></div>
+              <div class="kpi"><div class="kpi-label">Lead Time MRP (maks)</div><div id="kpi-max-lead" class="kpi-value">—</div></div>
+              <div class="kpi"><div class="kpi-label">Total Nilai Penggunaan</div><div id="kpi-annual-value" class="kpi-value">—</div></div>
             </div>
-            <div>
-              <label>Window SMA <input id="fc-window" type="number" min="2" max="8" value="3"></label>
-              <label>Bobot WMA <input id="fc-weights" type="text" value="0.5,0.3,0.2"></label>
-              <button id="fc-run">Hitung</button>
-              <button id="fc-clear">Bersihkan</button>
-            </div>
-            <div>
-              <div id="forecast-metrics"></div>
-              <canvas id="chart-forecast" height="120"></canvas>
-              <pre id="forecast-log" class="log"></pre>
+
+            <div class="grid-2 stack-gap">
+              <div class="card-inner">
+                <h3>Grafik Permintaan</h3>
+                <canvas id="chart-demand" height="140"></canvas>
+              </div>
+              <div class="card-inner">
+                <h3>Ringkasan</h3>
+                <div id="dash-summary" class="muted">—</div>
+                <div class="muted small">Gunakan tab Peramalan untuk membandingkan SMA/WMA.</div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div id="mrp-mod" class="sub-panel hidden">
-          <h3>MRP Sederhana</h3>
-          <div id="items-table" class="small"></div>
-          <button id="mrp-run">Jalankan MRP</button>
-          <div id="mrp-table"></div>
-          <pre id="mrp-log" class="log"></pre>
-        </div>
+          <!-- Peramalan -->
+          <div id="forecast-mod" class="sub-panel hidden">
+            <div class="grid-3 stack-gap">
+              <div>
+                <h4>Data Permintaan</h4>
+                <div id="demand-list" class="muted small">—</div>
+                <div class="mt8">
+                  <button id="add-period" class="btn small">Tambah</button>
+                  <button id="edit-demand" class="btn small ghost">Edit CSV</button>
+                </div>
+              </div>
 
-        <div id="schedule-mod" class="sub-panel hidden">
-          <h3>Penjadwalan (FCFS)</h3>
-          <div id="jobs-table" class="small"></div>
-          <button id="sch-run">Jadwalkan</button>
-          <div id="gantt"></div>
-          <pre id="sch-log" class="log"></pre>
-        </div>
+              <div>
+                <h4>Pengaturan</h4>
+                <label class="label">Window SMA<input id="fc-window" type="number" min="2" max="8" value="3" class="input" /></label>
+                <label class="label">Bobot WMA<input id="fc-weights" type="text" value="0.5,0.3,0.2" class="input" /></label>
+                <div class="mt8">
+                  <button id="fc-run" class="btn primary">Hitung</button>
+                  <button id="fc-clear" class="btn ghost">Bersihkan</button>
+                </div>
+              </div>
 
-        <div id="abc-mod" class="sub-panel hidden">
-          <h3>Kontrol Persediaan (ABC)</h3>
-          <div id="inv-table" class="small"></div>
-          <button id="abc-run">Klasifikasi</button>
-          <div id="abc-result"></div>
-          <pre id="abc-log" class="log"></pre>
-        </div>
+              <div>
+                <h4>Hasil & MAPE</h4>
+                <div id="forecast-metrics" class="muted small">—</div>
+                <canvas id="chart-forecast" height="140" class="mt8"></canvas>
+                <details class="mt8"><summary class="small muted">Log</summary><pre id="forecast-log" class="log"></pre></details>
+              </div>
+            </div>
+          </div>
 
-        <div id="quiz-mod" class="sub-panel hidden">
-          <h3>Kuis Cepat</h3>
-          <div id="quiz-box"></div>
-          <button id="quiz-check">Periksa</button>
-          <button id="quiz-reset">Reset</button>
-          <div id="quiz-score"></div>
+          <!-- MRP -->
+          <div id="mrp-mod" class="sub-panel hidden">
+            <div class="grid-2">
+              <div>
+                <h4>Item & BOM</h4>
+                <div id="items-table" class="muted small"></div>
+                <div class="mt8"><button id="mrp-run" class="btn">Jalankan</button></div>
+              </div>
+              <div>
+                <h4>Hasil MRP</h4>
+                <div id="mrp-table" class="muted small"></div>
+                <details class="mt8"><summary class="small muted">Log</summary><pre id="mrp-log" class="log"></pre></details>
+              </div>
+            </div>
+          </div>
+
+          <!-- Schedule -->
+          <div id="schedule-mod" class="sub-panel hidden">
+            <div class="grid-2">
+              <div>
+                <h4>Jobs</h4>
+                <div id="jobs-table" class="muted small"></div>
+                <div class="mt8"><button id="sch-run" class="btn">Jadwalkan</button></div>
+              </div>
+              <div>
+                <h4>Gantt (visual sederhana)</h4>
+                <div id="gantt" class="gantt"></div>
+                <pre id="sch-log" class="log"></pre>
+              </div>
+            </div>
+          </div>
+
+          <!-- ABC -->
+          <div id="abc-mod" class="sub-panel hidden">
+            <div class="grid-2">
+              <div>
+                <h4>Persediaan</h4>
+                <div id="inv-table" class="muted small"></div>
+                <div class="mt8"><button id="abc-run" class="btn">Klasifikasi</button></div>
+              </div>
+              <div>
+                <h4>Hasil & Saran</h4>
+                <div id="abc-result" class="muted small"></div>
+                <pre id="abc-log" class="log"></pre>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quiz -->
+          <div id="quiz-mod" class="sub-panel hidden">
+            <h4>Kuis Cepat (5 soal)</h4>
+            <div id="quiz-box" class="muted small"></div>
+            <div class="mt8">
+              <button id="quiz-check" class="btn primary">Periksa</button>
+              <button id="quiz-reset" class="btn ghost">Reset</button>
+              <div id="quiz-score" class="muted small mt8"></div>
+            </div>
+          </div>
         </div>
       </section>
 
       <!-- DATA -->
       <section id="data" class="tab-panel hidden">
-        <h2>Data Demo</h2>
-        <select id="dataset-select">
-          <option value="">-- Pilih dataset --</option>
-          <option value="tas">Tas Rajut</option>
-          <option value="sabun">Sabun Cair</option>
-          <option value="kue">Kue Kering</option>
-          <option value="kayu">Kerajinan Kayu</option>
-          <option value="konveksi">Konveksi Kaos</option>
-          <option value="keripik">Keripik</option>
-        </select>
-        <div class="editor-wrap">
-          <textarea id="json-editor"></textarea>
-        </div>
-        <div class="data-actions">
-          <button id="load-dataset">Muat</button>
-          <button id="save-json">Simpan ke aplikasi</button>
-          <button id="reset-json">Reset Default</button>
-          <div id="json-error" class="error"></div>
+        <div class="card">
+          <h2>Data Demo (Pilih dataset)</h2>
+          <div class="form-row">
+            <select id="dataset-select" class="input">
+              <option value="">-- Pilih dataset --</option>
+              <option value="tas">Tas Rajut</option>
+              <option value="sabun">Sabun Cair</option>
+              <option value="kue">Kue Kering</option>
+              <option value="kayu">Kerajinan Kayu</option>
+              <option value="konveksi">Konveksi Kaos</option>
+              <option value="keripik">Keripik</option>
+            </select>
+            <div class="btn-row">
+              <button id="load-dataset" class="btn">Muat</button>
+              <button id="save-json" class="btn primary">Simpan ke aplikasi</button>
+              <button id="reset-json" class="btn ghost">Reset Default</button>
+            </div>
+          </div>
+
+          <label class="label mt8">Editor JSON</label>
+          <textarea id="json-editor" class="editor" spellcheck="false"></textarea>
+          <div id="json-error" class="error mt8"></div>
         </div>
       </section>
     </main>
 
-    <footer class="footer">© 2025 — Materi PKK Perencanaan Produksi</footer>
+    <footer class="site-footer">Dikembangkan untuk pembelajaran PKK — gunakan sesuai kebutuhan kelas.</footer>
   </div>
 
-  <!-- Script lokal -->
   <script src="app.js"></script>
 </body>
 </html>
