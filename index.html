@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sistem Pembelajaran Perencanaan Produksi</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <div class="logo">PP</div>
+      <div>
+        <h1>Sistem Pembelajaran Perencanaan Produksi</h1>
+        <p>Belajar peramalan, MRP, penjadwalan, dan kontrol persediaan secara interaktif.</p>
+      </div>
+    </div>
+    <nav class="nav">
+      <button data-tab="dashboard" class="active">Dasbor</button>
+      <button data-tab="forecast">Peramalan</button>
+      <button data-tab="mrp">MRP</button>
+      <button data-tab="schedule">Penjadwalan</button>
+      <button data-tab="abc">ABC</button>
+      <button data-tab="quiz">Kuis</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- DASHBOARD -->
+    <section id="dashboard" class="tab active">
+      <div class="grid">
+        <div class="card">
+          <h2>Ringkasan</h2>
+          <div class="kpi">
+            <div class="kpi-item">
+              <span>Permintaan (minggu terakhir)</span>
+              <strong id="kpi-demand">—</strong>
+            </div>
+            <div class="kpi-item">
+              <span>Kapasitas (jam/minggu)</span>
+              <strong id="kpi-capacity">—</strong>
+            </div>
+            <div class="kpi-item">
+              <span>Persediaan akhir</span>
+              <strong id="kpi-inventory">—</strong>
+            </div>
+          </div>
+          <div class="actions">
+            <button id="btn-reset">Reset data demo</button>
+            <button id="btn-export">Export JSON</button>
+            <input type="file" id="file-import" hidden />
+            <button id="btn-import">Import JSON</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Grafik permintaan (demo)</h2>
+          <div id="chart-demand" class="bar-chart"></div>
+          <div class="legend">
+            <span class="badge primary">Permintaan aktual</span>
+            <span class="badge secondary">Peramalan</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FORECAST -->
+    <section id="forecast" class="tab">
+      <div class="card">
+        <h2>Peramalan permintaan</h2>
+        <p>Metode Simple Moving Average (SMA) dan Weighted SMA.</p>
+        <div class="flex">
+          <div class="panel">
+            <h3>Data input</h3>
+            <table id="tbl-forecast" class="table"></table>
+            <div class="actions">
+              <button id="fc-edit">Edit data</button>
+              <button id="fc-add">Tambah periode</button>
+            </div>
+          </div>
+          <div class="panel">
+            <h3>Pengaturan</h3>
+            <label>Window SMA:
+              <input type="number" id="fc-window" value="3" min="2" max="8" />
+            </label>
+            <label>Bobot WSMA (terbaru→terlama, pisahkan koma):
+              <input type="text" id="fc-weights" value="0.5,0.3,0.2" />
+            </label>
+            <div class="actions">
+              <button id="fc-run">Hitung peramalan</button>
+            </div>
+          </div>
+          <div class="panel">
+            <h3>Hasil</h3>
+            <table id="tbl-forecast-result" class="table"></table>
+            <div id="fc-metrics" class="metrics"></div>
+            <details>
+              <summary>Log Perhitungan</summary>
+              <pre id="fc-log"></pre>
+            </details>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MRP -->
+    <section id="mrp" class="tab">
+      <div class="card">
+        <h2>MRP sederhana</h2>
+        <p>Hitung kebutuhan bersih berdasarkan BOM, persediaan, dan lead time.</p>
+        <div class="flex">
+          <div class="panel">
+            <h3>Item & BOM</h3>
+            <table id="tbl-items" class="table"></table>
+            <div class="actions">
+              <button id="mrp-edit-items">Edit Item/BOM</button>
+            </div>
+          </div>
+          <div class="panel">
+            <h3>Parameter</h3>
+            <label>Lot size:
+              <select id="mrp-lot">
+                <option value="L4L">Lot-for-Lot (L4L)</option>
+                <option value="FOQ">Fixed Order Quantity (FOQ)</option>
+              </select>
+            </label>
+            <label>FOQ (jika dipilih):
+              <input type="number" id="mrp-foq" value="50" min="1" />
+            </label>
+            <div class="actions">
+              <button id="mrp-run">Jalankan MRP</button>
+            </div>
+          </div>
+          <div class="panel">
+            <h3>Hasil MRP</h3>
+            <table id="tbl-mrp" class="table"></table>
+            <details>
+              <summary>Log Perhitungan</summary>
+              <pre id="mrp-log"></pre>
+            </details>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCHEDULE -->
+    <section id="schedule" class="tab">
+      <div class="card">
+        <h2>Penjadwalan produksi</h2>
+        <p>Visualisasi alokasi job ke work center (FCFS, SPT).</p>
+        <div class="flex">
+          <div class="panel">
+            <h3>Job</h3>
+            <table id="tbl-jobs" class="table"></table>
+            <div class="actions">
+              <button id="sch-edit">Edit job</button>
+              <label>Aturan:
+                <select id="sch-rule">
+                  <option value="FCFS">FCFS</option>
+                  <option value="SPT">SPT</option>
+                </select>
+              </label>
+              <button id="sch-run">Jadwalkan</button>
+            </div>
+          </div>
+          <div class="panel">
+            <h3>Gantt</h3>
+            <div id="gantt" class="gantt"></div>
+            <div id="sch-metrics" class="metrics"></div>
+            <details>
+              <summary>Log Penjadwalan</summary>
+              <pre id="sch-log"></pre>
+            </details>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABC -->
+    <section id="abc" class="tab">
+      <div class="card">
+        <h2>Klasifikasi ABC</h2>
+        <p>Nilai konsumsi tahunan = harga × konsumsi. Urutkan dan klasifikasikan.</p>
+        <div class="flex">
+          <div class="panel">
+            <h3>Data persediaan</h3>
+            <table id="tbl-abc" class="table"></table>
+            <div class="actions">
+              <button id="abc-edit">Edit data</button>
+              <button id="abc-run">Klasifikasi</button>
+            </div>
+          </div>
+          <div class="panel">
+            <h3>Hasil</h3>
+            <table id="tbl-abc-result" class="table"></table>
+            <details>
+              <summary>Log ABC</summary>
+              <pre id="abc-log"></pre>
+            </details>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- QUIZ -->
+    <section id="quiz" class="tab">
+      <div class="card">
+        <h2>Kuis cepat</h2>
+        <div id="quiz-box" class="quiz"></div>
+        <div class="actions">
+          <button id="quiz-start">Mulai</button>
+          <button id="quiz-reset">Reset</button>
+        </div>
+        <div id="quiz-result" class="metrics"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <small>© 2025 Sistem Pembelajaran Perencanaan Produksi. Dibuat untuk demo edukasi HTML/JS murni.</small>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
