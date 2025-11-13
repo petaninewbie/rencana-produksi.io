@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Aplikasi PKK - Perencanaan Produksi</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>📘 PKK: Perencanaan Produksi</h1>
+    <p>Belajar konsep perencanaan produksi secara interaktif</p>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>Simulasi Perencanaan Produksi</h2>
+      <label>Permintaan Mingguan: <input type="number" id="demand" value="120"></label>
+      <label>Kapasitas Produksi: <input type="number" id="capacity" value="100"></label>
+      <label>Persediaan Awal: <input type="number" id="inventory" value="50"></label>
+      <button onclick="simulate()">Hitung Rencana</button>
+      <div id="result"></div>
+    </section>
+
+    <section class="card">
+      <h2>Kuis PKK</h2>
+      <p>Apa tujuan utama perencanaan produksi?</p>
+      <button onclick="quiz(1)">Mengurangi biaya</button>
+      <button onclick="quiz(2)">Menjamin ketersediaan produk</button>
+      <button onclick="quiz(3)">Meningkatkan promosi</button>
+      <div id="quiz-result"></div>
+    </section>
+  </main>
+
+  <footer>
+    <small>© 2025 Aplikasi PKK - Demo Edukasi</small>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
